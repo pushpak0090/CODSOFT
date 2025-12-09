@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Basic Calculator</title>
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+    }
+
+    body {
+        background: #f3f3f3;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .calculator {
+        width: 300px;
+        background: #222;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    .display {
+        background: #000;
+        color: #0f0;
+        height: 60px;
+        font-size: 28px;
+        text-align: right;
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        overflow: hidden;
+    }
+
+    .buttons {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+
+    button {
+        padding: 15px;
+        font-size: 18px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        background: #333;
+        color: white;
+        transition: 0.2s;
+    }
+
+    button:hover {
+        background: #555;
+    }
+
+    .operator {
+        background: orange;
+        color: black;
+        font-weight: bold;
+    }
+
+    .operator:hover {
+        background: #e69500;
+    }
+
+    .equal {
+        background: rgb(0, 150, 0);
+        color: white;
+    }
+
+    .equal:hover {
+        background: rgb(0, 180, 0);
+    }
+
+    .clear {
+        background: red;
+        color: white;
+        font-weight: bold;
+    }
+
+    .clear:hover {
+        background: darkred;
+    }
+
+</style>
+</head>
+<body>
+
+<div class="calculator">
+    <div class="display" id="display">0</div>
+
+    <div class="buttons">
+        <button class="clear">C</button>
+        <button class="operator">/</button>
+        <button class="operator">*</button>
+        <button class="operator">-</button>
+
+        <button>7</button>
+        <button>8</button>
+        <button>9</button>
+        <button class="operator">+</button>
+
+        <button>4</button>
+        <button>5</button>
+        <button>6</button>
+        <button class="equal">=</button>
+
+        <button>1</button>
+        <button>2</button>
+        <button>3</button>
+        <button>0</button>
+    </div>
+</div>
+
+<script>
+    const display = document.getElementById("display");
+    const buttons = document.querySelectorAll("button");
+    let input = "";
+
+    buttons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const value = btn.textContent;
+
+            // Clear button
+            if (btn.classList.contains("clear")) {
+                input = "";
+                display.textContent = "0";
+                return;
+            }
+
+            // Equal button
+            if (btn.classList.contains("equal")) {
+                try {
+                    input = eval(input); // performs calculation
+                    display.textContent = input;
+                } catch {
+                    display.textContent = "Error";
+                }
+                return;
+            }
+
+            // Normal number/operator button
+            input += value;
+            display.textContent = input;
+        });
+    });
+</script>
+
+</body>
+</html>
