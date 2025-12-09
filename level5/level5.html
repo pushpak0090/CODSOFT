@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Online Quiz Maker</title>
+<style>
+  :root{
+    --accent:#2b6cb0;
+    --accent-2:#1abc9c;
+    --bg:#f4f7fb;
+    --card:#ffffff;
+    --muted:#64748b;
+    --danger:#e53e3e;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background:var(--bg);
+    color:#0f172a;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  header{
+    background:linear-gradient(90deg,var(--accent),#3b82f6);
+    color:white;
+    padding:18px 20px;
+    display:flex;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+  }
+  header .brand{
+    display:flex;gap:12px;align-items:center;
+  }
+  header h1{font-size:18px;margin:0}
+  header p{margin:0;font-size:12px;opacity:.95}
+
+  nav.top{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  nav.top button, nav.top .link{
+    background:transparent;
+    color:white;
+    border:1px solid rgba(255,255,255,.12);
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  nav.top .link{border:0;opacity:.95}
+  nav.top button:hover{opacity:.9}
+  .container{
+    max-width:1100px;
+    margin:20px auto;
+    padding:16px;
+  }
+  .layout{
+    display:grid;
+    grid-template-columns:280px 1fr;
+    gap:18px;
+  }
+  aside.card{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:16px;
+    box-shadow:0 6px 18px rgba(12,20,40,0.06);
+    height:fit-content;
+  }
+  main.card{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:18px;
+    box-shadow:0 6px 18px rgba(12,20,40,0.06);
+  }
+
+  /* small UI pieces */
+  .muted{color:var(--muted)}
+  .row{display:flex;gap:10px;align-items:center}
+  .spacer{flex:1}
+  input[type="text"], input[type="password"], textarea, select{
+    width:100%;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid #e5e7eb;
+    background:transparent;
+  }
+  textarea{min-height:90px; resize:vertical}
+  label{display:block;margin-bottom:6px;font-weight:600;font-size:14px}
+
+  .btn{
+    background:var(--accent);
+    color:white;
+    padding:10px 14px;
+    border-radius:10px;
+    border:0;
+    cursor:pointer;
+    font-weight:700;
+  }
+  .btn.secondary{background:var(--accent-2)}
+  .btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+  .btn.danger{background:var(--danger)}
+
+  .quiz-card{
+    border-radius:10px;
+    padding:14px;
+    background:linear-gradient(180deg,#fff,#fbfdff);
+    border:1px solid #eef2ff;
+    margin-bottom:12px;
+  }
+
+  .small{font-size:13px;color:var(--muted)}
+  .title{font-size:18px;margin-bottom:6px}
+
+  /* create quiz UI */
+  .questions-list{display:flex;flex-direction:column;gap:12px;margin-top:10px}
+  .question-item{
+    border-radius:10px;padding:12px;border:1px dashed #e6eefc;background:linear-gradient(180deg,#fff,#fbfeff)
+  }
+  .options{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .option-row{display:flex;gap:8px;align-items:center}
+  .small-btn{padding:6px 8px;border-radius:8px;border:0;cursor:pointer}
+
+  /* taking quiz */
+  .question-card{padding:18px;border-radius:12px;border:1px solid #e2e8f0;background:#fff}
+  .choices{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .choice{
+    padding:10px;border-radius:8px;border:1px solid #e6eefc;background:#fbfdff;cursor:pointer;
+  }
+  .choice.selected{background:#e6f2ff;border-color:#a5d8ff}
+  .choice.correct{background:#dff7e0;border-color:#66c17c}
+  .choice.wrong{background:#ffe7e7;border-color:#f38a8a}
+
+  /* results */
+  .results{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .result-item{padding:12px;border-radius:10px;background:#fff;border:1px solid #eef2ff}
+
+  footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
+
+  /* responsiveness */
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr; padding-bottom:40px}
+    aside.card{order:2}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <rect width="24" height="24" rx="6" fill="rgba(255,255,255,0.12)"></rect>
+      <path d="M6 9h12M6 13h7" stroke="#fff" stroke-width="1.6" stroke-linecap="round"></path>
+    </svg>
+    <div>
+      <h1>QuizMaker</h1>
+      <p class="muted">Create & Take quizzes — instant feedback</p>
+    </div>
+  </div>
+
+  <nav class="top" id="topnav">
+    <!-- dynamic buttons -->
+  </nav>
+</header>
+
+<div class="container">
+  <div class="layout">
+    <aside class="card" id="sidebar">
+      <!-- sidebar content -->
+      <div id="userBlock">
+        <p class="small">Not signed in</p>
+        <div style="margin-top:8px">
+          <button class="btn" onclick="showView('login')">Sign in / Register</button>
+        </div>
+      </div>
+
+      <hr style="margin:14px 0;border:0;border-top:1px solid #eef2ff" />
+
+      <div>
+        <p class="small">Quick actions</p>
+        <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
+          <button class="btn ghost" onclick="showView('home')">Home</button>
+          <button class="btn ghost" onclick="showView('list')">Browse Quizzes</button>
+          <button class="btn ghost" onclick="showView('create')">Create Quiz</button>
+          <button class="btn ghost" onclick="showView('dashboard')">My Dashboard</button>
+        </div>
+      </div>
+
+      <hr style="margin:14px 0;border:0;border-top:1px solid #eef2ff" />
+
+      <div>
+        <p class="small">Tips</p>
+        <ul style="margin-top:8px;padding-left:18px;color:var(--muted)">
+          <li>Keep quizzes short (5–10 Qs)</li>
+          <li>Provide clear options</li>
+          <li>Try sample quizzes</li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="card" id="main">
+      <!-- Views will show here -->
+      <section id="view-home">
+        <h2>Welcome to QuizMaker</h2>
+        <p class="small">Create interactive multiple-choice quizzes, share them, and get instant feedback when users take them.</p>
+
+        <div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="quiz-card">
+            <div class="title">Create a Quiz</div>
+            <div class="small">Build a quiz by adding questions and choices. Indicate the correct answer for each question.</div>
+            <div style="margin-top:12px">
+              <button class="btn" onclick="showView('create')">Create Quiz</button>
+            </div>
+          </div>
+
+          <div class="quiz-card">
+            <div class="title">Take a Quiz</div>
+            <div class="small">Browse the quiz listing and start taking any quiz. You'll see your score and correct answers at the end.</div>
+            <div style="margin-top:12px">
+              <button class="btn secondary" onclick="showView('list')">Browse Quizzes</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LIST PAGE -->
+      <section id="view-list" style="display:none">
+        <div style="display:flex;align-items:center;gap:12px">
+          <h2>Available Quizzes</h2>
+          <div class="spacer"></div>
+          <input id="searchInput" type="text" placeholder="Search quizzes..." style="padding:8px;border-radius:9px;border:1px solid #e6eefc;width:220px" oninput="renderQuizList()"/>
+        </div>
+        <div id="quizList" style="margin-top:14px"></div>
+      </section>
+
+      <!-- CREATE PAGE -->
+      <section id="view-create" style="display:none">
+        <h2>Create Quiz</h2>
+        <div style="display:grid;gap:10px;max-width:900px">
+          <div>
+            <label>Quiz Title</label>
+            <input id="qTitle" type="text" placeholder="e.g. JavaScript Basics" />
+          </div>
+          <div>
+            <label>Quiz Description (optional)</label>
+            <textarea id="qDesc" placeholder="Describe your quiz"></textarea>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center">
+            <label style="margin-bottom:0">Add Question</label>
+            <button class="btn ghost small-btn" onclick="addQuestion()">+ New Question</button>
+            <div class="spacer"></div>
+            <button class="btn" onclick="saveQuiz()">Save Quiz</button>
+          </div>
+
+          <div class="questions-list" id="questionsArea"></div>
+        </div>
+      </section>
+
+      <!-- DASHBOARD -->
+      <section id="view-dashboard" style="display:none">
+        <h2>My Dashboard</h2>
+        <p class="small">Your created quizzes and activity.</p>
+        <div id="myQuizzes" style="margin-top:12px"></div>
+      </section>
+
+      <!-- TAKE QUIZ -->
+      <section id="view-take" style="display:none">
+        <h2 id="takeTitle"></h2>
+        <p id="takeDesc" class="small"></p>
+
+        <div style="margin-top:12px" id="takeArea"></div>
+
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn" id="prevBtn" onclick="prevQuestion()">Previous</button>
+          <button class="btn" id="nextBtn" onclick="nextQuestion()">Next</button>
+          <div class="spacer"></div>
+          <button class="btn secondary" id="submitQuizBtn" onclick="submitQuiz()">Submit Quiz</button>
+        </div>
+      </section>
+
+      <!-- RESULTS -->
+      <section id="view-results" style="display:none">
+        <h2>Results</h2>
+        <div id="resultsArea" style="margin-top:12px"></div>
+        <div style="margin-top:14px">
+          <button class="btn" onclick="showView('list')">Back to list</button>
+        </div>
+      </section>
+
+      <!-- LOGIN / REGISTER -->
+      <section id="view-login" style="display:none">
+        <h2>Sign in or Register</h2>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:260px">
+            <div>
+              <label>Email</label>
+              <input id="loginEmail" type="text" placeholder="you@example.com" />
+            </div>
+            <div style="margin-top:8px">
+              <label>Password</label>
+              <input id="loginPassword" type="password" placeholder="password" />
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px">
+              <button class="btn" onclick="login()">Sign in</button>
+              <button class="btn ghost" onclick="showRegister()">Register</button>
+            </div>
+          </div>
+
+          <div style="flex:1;min-width:260px;background:#fbfdff;padding:12px;border-radius:10px">
+            <p class="small">New here? Register to create quizzes and track your results.</p>
+            <div id="registerArea" style="display:none;margin-top:8px">
+              <label>Name</label>
+              <input id="regName" type="text" placeholder="Your name" />
+              <label style="margin-top:8px">Email</label>
+              <input id="regEmail" type="text" />
+              <label style="margin-top:8px">Password</label>
+              <input id="regPassword" type="password" />
+              <label style="margin-top:8px">Role</label>
+              <select id="regRole">
+                <option value="candidate">Candidate</option>
+                <option value="employer">Employer</option>
+              </select>
+              <div style="margin-top:8px">
+                <button class="btn" onclick="register()">Create account</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer>
+    Built with ❤️ — Demo Quiz Maker • Data stored in your browser (localStorage).
+  </footer>
+</div>
+
+<script>
+/*
+  Simple single-file Quiz Maker app
+  Storage keys in localStorage:
+    - qm_users : array of users {id,name,email,password,role}
+    - qm_current : {id,email,name,role}
+    - qm_quizzes : array of quizzes {id, title, description, creatorId, creatorName, createdAt, questions: [{q,options[],correct}]}
+*/
+
+const LS_USERS = "qm_users";
+const LS_CURRENT = "qm_current";
+const LS_QUIZZES = "qm_quizzes";
+
+/* ---------- Utilities ---------- */
+function uid(prefix='id'){
+  return prefix + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
+}
+function load(key){ try { return JSON.parse(localStorage.getItem(key) || 'null') } catch(e){return null} }
+function save(key, value){ localStorage.setItem(key, JSON.stringify(value)) }
+
+/* initialize storage if empty */
+if(!load(LS_USERS)) save(LS_USERS, []);
+if(!load(LS_QUIZZES)) save(LS_QUIZZES, []);
+
+/* App state */
+let state = {
+  view: 'home',
+  currentUser: load(LS_CURRENT),
+  activeQuiz: null,
+  takeState: { idx: 0, answers: [] }
+};
+
+/* ---------- UI helpers ---------- */
+function setTopNav(){
+  const nav = document.getElementById('topnav');
+  nav.innerHTML = '';
+  if(state.currentUser){
+    const user = state.currentUser;
+    const span = document.createElement('div');
+    span.style.display='flex'; span.style.gap='12px'; span.style.alignItems='center';
+    const name = document.createElement('div'); name.innerText = user.name || user.email; name.style.fontWeight=700; name.style.color='white';
+    span.appendChild(name);
+
+    const btnDash = document.createElement('button'); btnDash.className='link'; btnDash.innerText='Dashboard';
+    btnDash.onclick = ()=> showView('dashboard');
+    span.appendChild(btnDash);
+
+    const btnSignout = document.createElement('button'); btnSignout.className='link'; btnSignout.innerText='Sign out';
+    btnSignout.onclick = ()=> { signOut(); };
+
+    span.appendChild(btnSignout);
+    nav.appendChild(span);
+
+    // show sidebar user block
+    const userBlock = document.getElementById('userBlock');
+    userBlock.innerHTML = `<p class="small">Signed in as</p><div style="display:flex;gap:8px;align-items:center;margin-top:8px"><strong>${user.name || user.email}</strong><div class="spacer"></div></div>`;
+  } else {
+    const btn = document.createElement('button'); btn.className='link'; btn.innerText='Sign in / Register';
+    btn.onclick = ()=> showView('login');
+    nav.appendChild(btn);
+
+    const userBlock = document.getElementById('userBlock');
+    userBlock.innerHTML = `<p class="small">Not signed in</p><div style="margin-top:8px"><button class="btn" onclick="showView('login')">Sign in / Register</button></div>`;
+  }
+}
+
+/* show view helper */
+function showView(view){
+  state.view = view;
+  // hide all views
+  document.querySelectorAll('#main > section').forEach(s => s.style.display = 'none');
+  const el = document.getElementById('view-' + view);
+  if(el) el.style.display = 'block';
+
+  // run view-specific renderers
+  if(view === 'list') renderQuizList();
+  if(view === 'create') renderCreate();
+  if(view === 'dashboard') renderDashboard();
+  setTopNav();
+}
+
+/* ---------- Auth ---------- */
+function showRegister(){
+  document.getElementById('registerArea').style.display = 'block';
+}
+function register(){
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('regPassword').value;
+  const role = document.getElementById('regRole').value;
+
+  if(!name || !email || !pass) return alert('Enter name, email and password');
+  let users = load(LS_USERS) || [];
+  if(users.find(u=>u.email === email)) return alert('Email already registered');
+  const user = { id: uid('u'), name, email, password: pass, role };
+  users.push(user);
+  save(LS_USERS, users);
+  // auto-login
+  save(LS_CURRENT, { id:user.id, name:user.name, email:user.email, role:user.role });
+  state.currentUser = load(LS_CURRENT);
+  alert('Account created and signed in');
+  showView('home');
+}
+function login(){
+  const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('loginPassword').value;
+  if(!email || !pass) return alert('Enter email and password');
+  let users = load(LS_USERS) || [];
+  const u = users.find(usr => usr.email === email && usr.password === pass);
+  if(!u) return alert('Invalid credentials');
+  save(LS_CURRENT, { id:u.id, name:u.name, email:u.email, role:u.role });
+  state.currentUser = load(LS_CURRENT);
+  alert('Signed in');
+  showView('home');
+}
+function signOut(){
+  localStorage.removeItem(LS_CURRENT);
+  state.currentUser = null;
+  setTopNav();
+  showView('home');
+}
+
+/* ---------- Quiz create / edit ---------- */
+function addQuestion(){
+  // create a new empty question entry
+  const questions = document.getElementById('questionsArea');
+  const qid = uid('q');
+  const node = document.createElement('div');
+  node.className = 'question-item';
+  node.id = qid;
+  node.innerHTML = `
+    <div style="display:flex;gap:8px;align-items:center">
+      <label style="flex:1">Question</label>
+      <button class="small-btn" onclick="removeQuestion('${qid}')">Remove</button>
+    </div>
+    <input type="text" placeholder="Type the question..." class="q-text" />
+    <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+      <label style="margin-bottom:0">Options</label>
+      <div class="spacer"></div>
+      <button class="small-btn" onclick="addOption('${qid}')">+ Option</button>
+    </div>
+    <div class="options"></div>
+    <div style="margin-top:8px" class="small">Mark the correct option by selecting the radio.</div>
+  `;
+  questions.appendChild(node);
+  // add two default options
+  addOption(qid); addOption(qid);
+  node.querySelector('.q-text').focus();
+}
+
+function removeQuestion(id){
+  const el = document.getElementById(id);
+  if(el) el.remove();
+}
+
+function addOption(qid){
+  const qEl = document.getElementById(qid);
+  if(!qEl) return;
+  const opts = qEl.querySelector('.options');
+  const index = opts.children.length;
+  const optId = uid('opt');
+  const div = document.createElement('div');
+  div.className = 'option-row';
+  div.id = optId;
+  div.innerHTML = `
+    <input type="radio" name="correct-${qid}" style="margin-right:8px" />
+    <input type="text" placeholder="Option text" style="flex:1" class="opt-text" />
+    <button class="small-btn" onclick="removeOption('${optId}')">x</button>
+  `;
+  opts.appendChild(div);
+}
+
+function removeOption(optId){
+  const el = document.getElementById(optId);
+  if(el) el.remove();
+}
+
+/* save quiz */
+function saveQuiz(){
+  const title = document.getElementById('qTitle').value.trim();
+  if(!title) return alert('Enter quiz title');
+  const desc = document.getElementById('qDesc').value.trim();
+  const questionEls = Array.from(document.querySelectorAll('.question-item'));
+  if(questionEls.length === 0) return alert('Add at least one question');
+
+  const questions = [];
+  for(const qEl of questionEls){
+    const qTxt = qEl.querySelector('.q-text').value.trim();
+    if(!qTxt) return alert('Enter question text');
+    const optEls = Array.from(qEl.querySelectorAll('.option-row'));
+    if(optEls.length < 2) return alert('Each question needs at least 2 options');
+    const opts = [];
+    let correct = null;
+    for(const oe of optEls){
+      const t = oe.querySelector('.opt-text').value.trim();
+      if(!t) return alert('Option text cannot be empty');
+      opts.push(t);
+      const radio = oe.querySelector('input[type="radio"]');
+      if(radio && radio.checked) correct = opts.length - 1;
+    }
+    if(correct === null) return alert('Choose correct option for every question');
+    questions.push({ q: qTxt, options: opts, correct });
+  }
+
+  const quizzes = load(LS_QUIZZES) || [];
+  const quiz = {
+    id: uid('quiz'),
+    title,
+    description: desc,
+    creatorId: state.currentUser ? state.currentUser.id : null,
+    creatorName: state.currentUser ? state.currentUser.name : 'Anonymous',
+    createdAt: new Date().toISOString(),
+    questions
+  };
+  quizzes.unshift(quiz);
+  save(LS_QUIZZES, quizzes);
+
+  // clear create form
+  document.getElementById('qTitle').value = '';
+  document.getElementById('qDesc').value = '';
+  document.getElementById('questionsArea').innerHTML = '';
+  alert('Quiz saved!');
+
+  showView('list');
+}
+
+/* render create UI (useful when hitting view) */
+function renderCreate(){
+  if(!state.currentUser){
+    if(!confirm('You are not signed in — you can still create a quiz but it will be marked Anonymous. Continue?')) return showView('login');
+  }
+  document.getElementById('questionsArea').innerHTML = '';
+  // create two sample questions to help user
+  addQuestion(); addQuestion();
+  // prefill sample text (keeps user from starting blank)
+  const qEls = document.querySelectorAll('.question-item');
+  if(qEls[0]){
+    qEls[0].querySelector('.q-text').value = 'What is HTML used for?';
+    const opts = qEls[0].querySelectorAll('.opt-text');
+    if(opts[0]) opts[0].value = 'Structure web content';
+    if(opts[1]) opts[1].value = 'Style web pages';
+    if(opts[2]) { opts[2].value = 'Run server code' } else addOption(qEls[0].id);
+    // mark first as correct
+    qEls[0].querySelector('input[type="radio"]').checked = true;
+  }
+}
+
+/* ---------- Quiz listing & take logic ---------- */
+function renderQuizList(){
+  const list = load(LS_QUIZZES) || [];
+  const search = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const out = document.getElementById('quizList');
+  out.innerHTML = '';
+  const filtered = list.filter(q => (q.title + ' ' + (q.description||'') + ' ' + (q.creatorName||'')).toLowerCase().includes(search));
+  if(filtered.length === 0){
+    out.innerHTML = `<p class="small">No quizzes found.</p>`;
+    return;
+  }
+  filtered.forEach(q => {
+    const div = document.createElement('div');
+    div.className = 'quiz-card';
+    div.innerHTML = `
+      <div style="display:flex;gap:12px;align-items:center">
+        <div style="flex:1">
+          <div class="title">${escapeHtml(q.title)}</div>
+          <div class="small">${escapeHtml(q.description || '')}</div>
+          <div class="small" style="margin-top:6px">By: <strong>${escapeHtml(q.creatorName || 'Anonymous')}</strong> • ${new Date(q.createdAt).toLocaleString()}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn" onclick='startQuiz("${q.id}")'>Take Quiz</button>
+          <button class="btn ghost" onclick='previewQuiz("${q.id}")'>Preview</button>
+        </div>
+      </div>
+    `;
+    out.appendChild(div);
+  });
+}
+
+/* escape helper to avoid injection */
+function escapeHtml(s){ return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;') }
+
+/* preview opens the quiz in take mode but read-only */
+function previewQuiz(id){
+  startQuiz(id, { preview:true });
+}
+
+function startQuiz(id, opts = {}){
+  const quizzes = load(LS_QUIZZES) || [];
+  const q = quizzes.find(x => x.id === id);
+  if(!q) return alert('Quiz not found');
+  state.activeQuiz = q;
+  state.takeState = { idx: 0, answers: new Array(q.questions.length).fill(null), preview: !!opts.preview };
+  renderTake();
+  showView('take');
+}
+
+function renderTake(){
+  const q = state.activeQuiz;
+  if(!q) return;
+  document.getElementById('takeTitle').innerText = q.title;
+  document.getElementById('takeDesc').innerText = q.description || '';
+  const area = document.getElementById('takeArea');
+  area.innerHTML = '';
+  const idx = state.takeState.idx;
+  const qObj = q.questions[idx];
+  const card = document.createElement('div');
+  card.className = 'question-card';
+
+  card.innerHTML = `
+    <div class="small">Question ${idx + 1} of ${q.questions.length}</div>
+    <div style="margin-top:8px;font-weight:700">${escapeHtml(qObj.q)}</div>
+    <div class="choices" id="choicesArea"></div>
+  `;
+  area.appendChild(card);
+
+  const choicesArea = card.querySelector('#choicesArea');
+  qObj.options.forEach((opt, i) => {
+    const ch = document.createElement('div');
+    ch.className = 'choice';
+    if(state.takeState.answers[idx] === i) ch.classList.add('selected');
+    ch.innerText = opt;
+    ch.onclick = ()=> {
+      if(state.takeState.preview) return; // read-only preview
+      state.takeState.answers[idx] = i;
+      // re-render to reflect selection
+      renderTake();
+    };
+    choicesArea.appendChild(ch);
+  });
+
+  // update buttons
+  document.getElementById('prevBtn').disabled = idx === 0;
+  document.getElementById('nextBtn').disabled = idx === q.questions.length - 1;
+  document.getElementById('submitQuizBtn').style.display = (state.takeState.preview ? 'none' : 'inline-block');
+}
+
+/* navigation */
+function nextQuestion(){
+  const q = state.activeQuiz;
+  if(state.takeState.idx < q.questions.length - 1){
+    state.takeState.idx++;
+    renderTake();
+  }
+}
+function prevQuestion(){
+  if(state.takeState.idx > 0){
+    state.takeState.idx--;
+    renderTake();
+  }
+}
+
+/* submit & results */
+function submitQuiz(){
+  const q = state.activeQuiz;
+  const answers = state.takeState.answers;
+  // ensure all answered or confirm partial
+  if(answers.some(a => a === null)){
+    if(!confirm('You have unanswered questions. Submit anyway?')) return;
+  }
+  let correctCount = 0;
+  const review = q.questions.map((qq, i) => {
+    const ans = answers[i];
+    const ok = ans === qq.correct;
+    if(ok) correctCount++;
+    return {
+      q: qq.q, options: qq.options, selected: ans, correct: qq.correct, correctText: qq.options[qq.correct]
+    };
+  });
+
+  const score = Math.round((correctCount / q.questions.length) * 100);
+  // prepare results view
+  const area = document.getElementById('resultsArea');
+  area.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="flex:1">
+        <h3>${escapeHtml(q.title)}</h3>
+        <div class="small">By ${escapeHtml(q.creatorName || 'Anonymous')}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:28px;font-weight:800">${correctCount}/${q.questions.length}</div>
+        <div class="small">Score: ${score}%</div>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <h4>Review</h4>
+      <div id="reviewList"></div>
+    </div>
+  `;
+  const reviewList = area.querySelector('#reviewList');
+  review.forEach((r, i) => {
+    const item = document.createElement('div');
+    item.className = 'result-item';
+    const selText = r.selected === null ? '<i>Not answered</i>' : escapeHtml(r.options[r.selected]);
+    const correct = escapeHtml(r.correctText);
+    let status = r.selected === r.correct ? `<span style="color:green;font-weight:700">Correct</span>` : `<span style="color:#c53030;font-weight:700">Wrong</span>`;
+    item.innerHTML = `
+      <div style="font-weight:700">Q${i+1}. ${escapeHtml(r.q)}</div>
+      <div class="small" style="margin-top:6px">Your answer: ${selText}</div>
+      <div class="small" style="margin-top:6px">Correct answer: ${correct} • ${status}</div>
+    `;
+    reviewList.appendChild(item);
+  });
+
+  // save attempt to user's record if signed in
+  if(state.currentUser){
+    const users = load(LS_USERS) || [];
+    const uidx = users.findIndex(x => x.id === state.currentUser.id);
+    if(uidx !== -1){
+      users[uidx].attempts = users[uidx].attempts || [];
+      users[uidx].attempts.unshift({ quizId: q.id, quizTitle: q.title, score, correct: correctCount, total: q.questions.length, at: new Date().toISOString() });
+      save(LS_USERS, users);
+    }
+  }
+
+  showView('results');
+}
+
+/* ---------- Dashboard ---------- */
+function renderDashboard(){
+  const out = document.getElementById('myQuizzes');
+  out.innerHTML = '';
+  if(!state.currentUser){
+    out.innerHTML = `<p class="small">Sign in to see your quizzes</p>`;
+    return;
+  }
+  const quizzes = load(LS_QUIZZES) || [];
+  const mine = quizzes.filter(q => q.creatorId === state.currentUser.id);
+  if(mine.length === 0) out.innerHTML = `<p class="small">You haven't created any quizzes yet.</p>`;
+  mine.forEach(q => {
+    const d = document.createElement('div');
+    d.className = 'quiz-card';
+    d.innerHTML = `
+      <div style="display:flex;gap:12px;align-items:center">
+        <div style="flex:1">
+          <div class="title">${escapeHtml(q.title)}</div>
+          <div class="small">${escapeHtml(q.description || '')}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn" onclick='startQuiz("${q.id}")'>Take</button>
+          <button class="btn ghost" onclick='deleteQuiz("${q.id}")'>Delete</button>
+        </div>
+      </div>
+    `;
+    out.appendChild(d);
+  });
+
+  // show attempts
+  const users = load(LS_USERS) || [];
+  const me = users.find(u => u.id === state.currentUser.id);
+  const attemptsHTML = document.createElement('div');
+  attemptsHTML.style.marginTop = '12px';
+  attemptsHTML.innerHTML = `<h3>Recent Attempts</h3>`;
+  if(me && me.attempts && me.attempts.length){
+    me.attempts.slice(0,6).forEach(a => {
+      const it = document.createElement('div');
+      it.className = 'small';
+      it.style.marginTop='6px';
+      it.innerText = `${a.quizTitle} — ${a.correct}/${a.total} • ${a.score}% • ${new Date(a.at).toLocaleString()}`;
+      attemptsHTML.appendChild(it);
+    });
+  } else {
+    const p = document.createElement('p'); p.className='small'; p.innerText='No attempts yet';
+    attemptsHTML.appendChild(p);
+  }
+  out.appendChild(attemptsHTML);
+}
+
+/* delete quiz if creator */
+function deleteQuiz(id){
+  if(!confirm('Delete this quiz? This cannot be undone.')) return;
+  const quizzes = load(LS_QUIZZES) || [];
+  const idx = quizzes.findIndex(q => q.id === id);
+  if(idx === -1) return alert('Not found');
+  if(quizzes[idx].creatorId !== state.currentUser.id) return alert('You can only delete your own quizzes');
+  quizzes.splice(idx,1);
+  save(LS_QUIZZES, quizzes);
+  renderDashboard();
+  renderQuizList();
+}
+
+/* ---------- initial demo data (if empty) ---------- */
+if((load(LS_QUIZZES) || []).length === 0){
+  const sample = [
+    {
+      id: uid('quiz'),
+      title: 'HTML Basics',
+      description: 'Simple quiz on HTML fundamentals.',
+      creatorId: null, creatorName: 'System',
+      createdAt: new Date().toISOString(),
+      questions: [
+        { q: 'What does HTML stand for?', options: ['Hyper Text Markup Language','Home Tool Markup Language','Hyperlinks and Text Markup'], correct: 0 },
+        { q: 'Which tag is used for a paragraph?', options: ['<p>','<para>','<text>'], correct: 0 },
+        { q: 'Which attribute is used to link CSS?', options: ['href','src','rel'], correct: 0 }
+      ]
+    },
+    {
+      id: uid('quiz'),
+      title: 'JavaScript Quick Quiz',
+      description: 'JS basics: types and syntax.',
+      creatorId: null, creatorName: 'System',
+      createdAt: new Date().toISOString(),
+      questions: [
+        { q: 'Which keyword declares a variable with block scope?', options: ['var','let','const?'], correct: 1 },
+        { q: 'What is typeof [] ?', options: ['array','object','list'], correct: 1 }
+      ]
+    }
+  ];
+  save(LS_QUIZZES, sample);
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  setTopNav();
+  showView('home');
+}
+boot();
+
+/* allow simple keyboard navigation when taking (left/right) */
+document.addEventListener('keydown', (e) => {
+  if(state.view === 'take'){
+    if(e.key === 'ArrowRight') nextQuestion();
+    if(e.key === 'ArrowLeft') prevQuestion();
+  }
+});
+</script>
+</body>
+</html>
